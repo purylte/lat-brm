@@ -102,7 +102,6 @@ namespace lat_brm.Controllers
             TbMEmployee response;
             try
             {
-                //response = _employeeRepository.Update(employee, requestObj);
                 response = _employeeRepository.Update(requestObj);
             }
             catch
