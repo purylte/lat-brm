@@ -146,17 +146,19 @@ namespace lat_brm.Controllers
         [HttpGet("info")]
         public IActionResult GetInfo()
         {
-            var employees = _employeeRepository.GetAll();
-            var employeeResponse = new List<EmployeeResponseInfo>();
-            foreach (var employee in employees)
+            List<EmployeeResponseInfo> employeeResponses;
+            try
             {
-                var education = _educationRepository.GetByGuid(employee.Guid);
-                if (education is null) continue;
-                if (education.UniversityGuid is null) continue;
-                var university = _universityRepository.GetByGuid((Guid)education.UniversityGuid);
-                if (university is null) continue;
-
-                employeeResponse.Add(new EmployeeResponseInfo
+                // Left Join Employee and Education
+                // Left Join Education and University
+                // Populates response with null if theres no relation from Employee.
+                employeeResponses = (
+                from employee in _employeeDbContext.TbMEmployees
+                join education in _employeeDbContext.TbMEducations on employee.Guid equals education.Guid into eduGroup
+                from education in eduGroup.DefaultIfEmpty()
+                join university in _employeeDbContext.TbMUniversities on education != null ? education.UniversityGuid : (Guid?)null equals university.Guid into uniGroup
+                from university in uniGroup.DefaultIfEmpty()
+                select new EmployeeResponseInfo
                 {
                     EmployeeGuid = employee.Guid,
                     Nik = employee.Nik,
@@ -166,57 +168,60 @@ namespace lat_brm.Controllers
                     Gender = employee.Gender,
                     BirthDate = employee.BirthDate,
                     HiringDate = employee.HiringDate,
-                    Degree = education.Degree,
-                    Gpa = education.Gpa,
-                    Major = education.Major,
-                    UniversityCode = university.Code,
-                    UniversityName = university.Name
-                });
+                    Degree = education != null ? education.Degree : null,
+                    Gpa = education != null ? education.Gpa : null,
+                    Major = education != null ? education.Major : null,
+                    UniversityCode = university != null ? university.Code : null,
+                    UniversityName = university != null ? university.Name : null
+                }).ToList();
             }
-            return Ok(employeeResponse);
+            catch (Exception)
+            {
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+
+            return Ok(employeeResponses);
         }
 
 
         [HttpGet("info/{id:Guid}")]
         public IActionResult GetInfoByGuid(Guid id)
         {
-            var employee = _employeeRepository.GetByGuid(id);
-            if (employee == null)
+            IQueryable<EmployeeResponseInfo> employeeResponse;
+            try
             {
-                return NotFound($"Employee with guid {id} not found");
+                // Left Join Employee and Education
+                // Left Join Education and University
+                // Populates response with null if theres no relation from Employee.
+                employeeResponse =
+                from employee in _employeeDbContext.TbMEmployees
+                where employee.Guid == id
+                join education in _employeeDbContext.TbMEducations on employee.Guid equals education.Guid into eduGroup
+                from education in eduGroup.DefaultIfEmpty()
+                join university in _employeeDbContext.TbMUniversities on education != null ? education.UniversityGuid : (Guid?)null equals university.Guid into uniGroup
+                from university in uniGroup.DefaultIfEmpty()
+                select new EmployeeResponseInfo
+                {
+                    EmployeeGuid = employee.Guid,
+                    Nik = employee.Nik,
+                    FullName = $"{employee.FirstName} {employee.LastName}",
+                    PhoneNumber = employee.PhoneNumber,
+                    Email = employee.Email,
+                    Gender = employee.Gender,
+                    BirthDate = employee.BirthDate,
+                    HiringDate = employee.HiringDate,
+                    Degree = education != null ? education.Degree : null,
+                    Gpa = education != null ? education.Gpa : null,
+                    Major = education != null ? education.Major : null,
+                    UniversityCode = university != null ? university.Code : null,
+                    UniversityName = university != null ? university.Name : null
+                };
             }
-            var education = _educationRepository.GetByGuid(employee.Guid);
-            if (education is null)
+            catch (Exception)
             {
-                return NotFound($"Education with guid {employee.Guid} not found");
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-
-            if (education.UniversityGuid is null)
-            {
-                return NotFound("University not found");
-            }
-            var university = _universityRepository.GetByGuid((Guid)education.UniversityGuid);
-            if (university is null)
-            {
-                return NotFound($"University with guid {education.UniversityGuid}");
-            }
-
-            return Ok(new EmployeeResponseInfo
-            {
-                EmployeeGuid = employee.Guid,
-                Nik = employee.Nik,
-                FullName = $"{employee.FirstName} {employee.LastName}",
-                PhoneNumber = employee.PhoneNumber,
-                Email = employee.Email,
-                Gender = employee.Gender,
-                BirthDate = employee.BirthDate,
-                HiringDate = employee.HiringDate,
-                Degree = education.Degree,
-                Gpa = education.Gpa,
-                Major = education.Major,
-                UniversityCode = university.Code,
-                UniversityName = university.Name
-            });
+            return Ok(employeeResponse.SingleOrDefault());
         }
 
         [HttpPost("register")]
@@ -254,6 +259,8 @@ namespace lat_brm.Controllers
                     BirthDate = request.BirthDate,
                     Gender = request.Gender,
                     HiringDate = request.HiringDate,
+                    Email = request.Email,
+                    PhoneNumber = request.PhoneNumber,
                 });
 
                 _educationRepository.Insert(new EducationRequestInsert
