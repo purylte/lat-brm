@@ -1,11 +1,10 @@
 ﻿using lat_brm.Contracts;
+using lat_brm.Data;
 using lat_brm.Dtos.Account;
 using lat_brm.Dtos.Education;
 using lat_brm.Dtos.Employee;
 using lat_brm.Dtos.University;
 using lat_brm.Models;
-using lat_brm.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,13 +18,15 @@ namespace lat_brm.Controllers
         private readonly IUniversityRepository _universityRepository;
         private readonly IEducationRepository _educationRepository;
         private readonly IAccountRepository _accountRepository;
+        private readonly EmployeeDbContext _employeeDbContext;
 
-        public EmployeeController(IEmployeeRepository employeeRepository, IUniversityRepository universityRepository, IEducationRepository educationRepository, IAccountRepository accountRepository)
+        public EmployeeController(IEmployeeRepository employeeRepository, IUniversityRepository universityRepository, IEducationRepository educationRepository, IAccountRepository accountRepository, EmployeeDbContext employeeDbContext)
         {
             _employeeRepository = employeeRepository;
             _universityRepository = universityRepository;
             _educationRepository = educationRepository;
             _accountRepository = accountRepository;
+            _employeeDbContext = employeeDbContext;
         }
 
         [HttpGet]
@@ -241,9 +242,10 @@ namespace lat_brm.Controllers
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
 
+            // Insert employee, education, and account
+            using var transaction = _employeeDbContext.Database.BeginTransaction();
             try
             {
-                // Insert employee, education, and account
                 var employee = _employeeRepository.Insert(new EmployeeRequestInsert
                 {
                     Nik = request.Nik,
@@ -272,6 +274,8 @@ namespace lat_brm.Controllers
                     Otp = 12345,
                     Password = request.Password,
                 });
+
+                transaction.Commit();
             }
             catch (Exception e) when (e is DbUpdateException || e is DbUpdateConcurrencyException)
             {
