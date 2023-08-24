@@ -160,7 +160,7 @@ namespace lat_brm.Controllers
                 {
                     EmployeeGuid = employee.Guid,
                     Nik = employee.Nik,
-                    FullName = "${employee.FirstName} {employee.LastName}",
+                    FullName = $"{employee.FirstName} {employee.LastName}",
                     PhoneNumber = employee.PhoneNumber,
                     Email = employee.Email,
                     Gender = employee.Gender,
@@ -205,7 +205,7 @@ namespace lat_brm.Controllers
             {
                 EmployeeGuid = employee.Guid,
                 Nik = employee.Nik,
-                FullName = "${employee.FirstName} {employee.LastName}",
+                FullName = $"{employee.FirstName} {employee.LastName}",
                 PhoneNumber = employee.PhoneNumber,
                 Email = employee.Email,
                 Gender = employee.Gender,
