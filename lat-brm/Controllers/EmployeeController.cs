@@ -291,5 +291,26 @@ namespace lat_brm.Controllers
 
             return Ok("Registration Successful!");
         }
+
+        [HttpPost("login")]
+        public IActionResult Login(EmployeeRequestLogin request)
+        {
+            TbMEmployee? employeeResponse;
+            try
+            {
+                employeeResponse = (
+                from employee in _employeeDbContext.TbMEmployees
+                join account in _employeeDbContext.TbMAccounts on employee.Guid equals account.Guid
+                where employee.Email == request.Email && account.Password == request.Password
+                select employee
+                ).FirstOrDefault();
+            }
+            catch (Exception)
+            {
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+
+            return Ok((EmployeeResponse)employeeResponse);
+        }
     }
 }
