@@ -1,4 +1,5 @@
 ﻿using lat_brm.Contracts.Repositories;
+using lat_brm.Contracts.Services;
 using lat_brm.Dtos.University;
 using lat_brm.Models;
 using lat_brm.Repositories;
@@ -11,119 +12,62 @@ namespace lat_brm.Controllers
     public class UniversityController : ControllerBase
     {
 
-        public readonly IUniversityRepository _universityRepository;
+        private readonly IUniversityService _universityService;
 
-        public UniversityController(IUniversityRepository universityRepository)
+        public UniversityController(IUniversityService universityService)
         {
-            _universityRepository = universityRepository;
+            _universityService = universityService;
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            IEnumerable<TbMUniversity> universities;
-            try
-            {
-                universities = _universityRepository.GetAll();
-            }
-            catch (Exception)
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-
-            var universityResponses = universities.Select(university => (UniversityResponse)university)
-                .ToList();
+            var universityResponses = _universityService.GetAll();
             return Ok(universityResponses);
         }
 
         [HttpGet("{id:Guid}")]
         public IActionResult GetById(Guid id)
         {
-            TbMUniversity? university;
-            try
-            {
-                university = _universityRepository.GetByGuid(id);
-            }
-            catch
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-
+            var university = _universityService.GetById(id);
             if (university == null)
             {
                 return NotFound("University not found");
             }
-
-            return Ok((UniversityResponse)university);
+            return Ok(university);
         }
 
         [HttpPost]
         public IActionResult Insert(UniversityRequestInsert request)
         {
-            TbMUniversity university;
-            try
-            {
-                university = _universityRepository.Insert(request);
-            }
-            catch
+            var university = _universityService.Insert(request);
+            if (university == null)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
 
-            return Ok((UniversityResponse)university);
+            return Ok(university);
         }
 
         [HttpPut]
         public IActionResult Update(UniversityRequestUpdate request)
         {
-            TbMUniversity? university;
-            try
-            {
-                university = _universityRepository.GetByGuid(request.Guid);
-            }
-            catch (Exception)
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-
+            var university = _universityService.Update(request);
             if (university == null)
             {
-                return NotFound("University not found");
-            }
-
-            TbMUniversity requestObj = request;
-            requestObj.CreatedDate = university.CreatedDate;
-
-            TbMUniversity response;
-            try
-            {
-                response = _universityRepository.Update(requestObj);
-            }
-            catch
-            {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-
-            return Ok((UniversityResponse)response);
+            return Ok(university);
         }
 
         [HttpDelete("{id:Guid}")]
         public IActionResult Delete(Guid id)
         {
-            if (_universityRepository.GetByGuid(id) == null)
-            {
-                return NotFound("University not found");
-            }
-            var university = _universityRepository.GetByGuid(id)!;
-            try
-            {
-                _universityRepository.Delete(university);
-            }
-            catch
+            var isDeleted = _universityService.Delete(id);
+            if (!isDeleted)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-
             return NoContent();
         }
     }

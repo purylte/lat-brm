@@ -1,9 +1,11 @@
 using lat_brm.Data;
 using Microsoft.EntityFrameworkCore;
 using lat_brm.Controllers;
-using lat_brm.Contracts;
 using lat_brm.Models;
 using lat_brm.Repositories;
+using lat_brm.Contracts.Repositories;
+using lat_brm.Contracts.Services;
+using lat_brm.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,8 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
 
+// Add services
+builder.Services.AddScoped<IUniversityService, UniversityService>();
 
 var app = builder.Build();
 
