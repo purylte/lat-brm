@@ -30,7 +30,9 @@ builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
 
 // Add services
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IUniversityService, UniversityService>();
+
 
 var app = builder.Build();
 
