@@ -5,8 +5,10 @@ using lat_brm.Dtos.Education;
 using lat_brm.Dtos.Employee;
 using lat_brm.Dtos.University;
 using lat_brm.Models;
+using lat_brm.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Principal;
 
 namespace lat_brm.Controllers
 {
@@ -247,6 +249,7 @@ namespace lat_brm.Controllers
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
 
+            var passwordHash = BCryptPassword.HashPassword(request.Password);
             // Insert employee, education, and account
             using var transaction = _employeeDbContext.Database.BeginTransaction();
             try
@@ -279,7 +282,7 @@ namespace lat_brm.Controllers
                     IsDeleted = 0,
                     IsUsed = 1,
                     Otp = 12345,
-                    Password = request.Password,
+                    Password = passwordHash
                 });
 
                 transaction.Commit();
@@ -301,13 +304,25 @@ namespace lat_brm.Controllers
                 employeeResponse = (
                 from employee in _employeeDbContext.TbMEmployees
                 join account in _employeeDbContext.TbMAccounts on employee.Guid equals account.Guid
-                where employee.Email == request.Email && account.Password == request.Password
+                where employee.Email == request.Email
                 select employee
-                ).FirstOrDefault();
+                ).Include(e => e.TbMAccount)
+                .FirstOrDefault();
             }
             catch (Exception)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+
+            if (employeeResponse is null) {
+                return NotFound("Login failed");
+            }
+
+            
+
+            if (!BCryptPassword.ValidatePassword(request.Password, employeeResponse.TbMAccount.Password))
+            {
+                return NotFound("Login failed");
             }
 
             return Ok((EmployeeResponse)employeeResponse);
