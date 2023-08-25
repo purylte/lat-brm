@@ -15,11 +15,10 @@ namespace lat_brm.Services
             _universityRepository = universityRepository;
         }
 
-        public List<UniversityResponse> GetAll()
+        public IEnumerable<UniversityResponse> GetAll()
         {
             var universityResponses = _universityRepository.GetAll()
-                .Select(university => (UniversityResponse)university)
-                .ToList();
+                .Select(university => (UniversityResponse)university);
 
             return universityResponses;
         }
