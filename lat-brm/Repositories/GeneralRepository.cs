@@ -1,4 +1,4 @@
-﻿using lat_brm.Contracts;
+﻿using lat_brm.Contracts.Repositories;
 using lat_brm.Data;
 using lat_brm.Models;
 
