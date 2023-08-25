@@ -1,4 +1,5 @@
 ﻿using lat_brm.Contracts.Repositories;
+using lat_brm.Contracts.Services;
 using lat_brm.Dtos.AccountRole;
 using lat_brm.Models;
 using lat_brm.Repositories;
@@ -10,139 +11,58 @@ namespace lat_brm.Controllers
     [ApiController]
     public class AccountRoleController : ControllerBase
     {
-        private readonly IAccountRoleRepository _accountRoleRepository;
-        private readonly IAccountRepository _accountRepository;
-        private readonly IRoleRepository _roleRepository;
+        private readonly IAccountRoleService _accountRoleService;
 
-        public AccountRoleController(IAccountRoleRepository accountRoleRepository, IAccountRepository accountRepository, IRoleRepository roleRepository)
+        public AccountRoleController(IAccountRoleService accountRoleService)
         {
-            _accountRoleRepository = accountRoleRepository;
-            _accountRepository = accountRepository;
-            _roleRepository = roleRepository;
+            _accountRoleService = accountRoleService;
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            IEnumerable<TbMAccountRole> accountRoles;
-            try
-            {
-                accountRoles = _accountRoleRepository.GetAll();
-            }
-            catch (Exception)
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-            var result = accountRoles.Select(accountRole => (AccountRoleResponse)accountRole);
-
-            return Ok(result);
+            var accountRoles = _accountRoleService.GetAll();
+            return Ok(accountRoles);
         }
 
         [HttpGet("{id:Guid}")]
         public IActionResult GetById(Guid id)
         {
-            TbMAccountRole? accountRole;
-            try
-            {
-                accountRole = _accountRoleRepository.GetByGuid(id);
-            }
-            catch (Exception)
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
+            var accountRole = _accountRoleService.GetById(id);
             if (accountRole == null)
             {
                 return NotFound("Account Role not found");
             }
-            return Ok((AccountRoleResponse)accountRole);
+            return Ok(accountRole);
         }
 
         [HttpPost]
         public IActionResult Insert(AccountRoleRequestInsert request)
         {
-            if (_accountRepository.GetByGuid(request.AccountGuid) == null)
-            {
-                return NotFound("Account not found");
-            }
-
-            if (_roleRepository.GetByGuid(request.RoleGuid) == null)
-            {
-                return NotFound("Role not found");
-            }
-            TbMAccountRole accountRole;
-            try
-            {
-                accountRole = _accountRoleRepository.Insert(request);
-            }
-            catch (Exception)
+            var accountRole = _accountRoleService.Insert(request);
+            if (accountRole == null)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-            return Ok((AccountRoleResponse)accountRole);
+            return Ok(accountRole);
         }
 
         [HttpPut]
         public IActionResult Update(AccountRoleRequestUpdate request)
         {
-            TbMAccount? account;
-            TbMRole? role;
-            TbMAccountRole? accountRole;
-
-            try
-            {
-                accountRole = _accountRoleRepository.GetByGuid(request.Guid);
-                account = _accountRepository.GetByGuid(request.AccountGuid);
-                role = _roleRepository.GetByGuid(request.RoleGuid);
-            }
-            catch (Exception)
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-
+            var accountRole = _accountRoleService.Update(request);
             if (accountRole == null)
             {
-                return NotFound("Account Role not found");
-            }
-            if (account == null)
-            {
-                return NotFound("Account not found");
-            }
-
-            if (role == null)
-            {
-                return NotFound("Role not found");
-            }
-
-
-            TbMAccountRole requestObj = request;
-            requestObj.CreatedDate = accountRole.CreatedDate;
-            TbMAccountRole response;
-            
-            try
-            {
-                response = _accountRoleRepository.Update(requestObj);
-            }
-            catch
-            {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-            return Ok((AccountRoleResponse)response);
+            return Ok(accountRole);
         }
 
         [HttpDelete("{id:Guid}")]
         public IActionResult Delete(Guid id)
         {
-            var accountRole = _accountRoleRepository.GetByGuid(id);
-            if (accountRole == null)
-            {
-                return NotFound("Account Role not found");
-            }
-
-            try
-            {
-                _accountRoleRepository.Delete(accountRole);
-            }
-            catch
+            var isDeleted = _accountRoleService.Delete(id);
+            if (!isDeleted)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }

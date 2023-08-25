@@ -31,6 +31,11 @@ builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
 
 // Add services
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IAccountRoleService, AccountRoleService>();
+builder.Services.AddScoped<IEducationService, EducationService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IUniversityService, UniversityService>();
 
 

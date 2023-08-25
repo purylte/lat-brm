@@ -1,4 +1,5 @@
 ﻿using lat_brm.Contracts.Repositories;
+using lat_brm.Contracts.Services;
 using lat_brm.Dtos.Education;
 using lat_brm.Models;
 using lat_brm.Repositories;
@@ -11,149 +12,58 @@ namespace lat_brm.Controllers
     public class EducationController : ControllerBase
     {
 
-        private readonly IEducationRepository _educationRepository;
-        private readonly IEmployeeRepository _employeeRepository;
-        private readonly IUniversityRepository _universityRepository;
+        private readonly IEducationService _educationService;
 
-        public EducationController(IEducationRepository educationRepository, IEmployeeRepository employeeRepository, IUniversityRepository universityRepository)
+        public EducationController(IEducationService educationService)
         {
-            _educationRepository = educationRepository;
-            _employeeRepository = employeeRepository;
-            _universityRepository = universityRepository;
+            _educationService = educationService;
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            IEnumerable<TbMEducation> educations;
-            try
-            {
-                educations = _educationRepository.GetAll();
-            }
-            catch
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-            var educationResponses = educations.Select(education => (EducationResponse)education);
-
-            return Ok(educationResponses);
-
+            var educations = _educationService.GetAll();
+            return Ok(educations);
         }
 
         [HttpGet("{id:Guid}")]
         public IActionResult GetById(Guid id)
         {
-            TbMEducation? education;
-            try
-            {
-                education = _educationRepository.GetByGuid(id);
-            }
-            catch
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-            if (education == null)
+            var education = _educationService.GetById(id);
+            if (education is null)
             {
                 return NotFound("Education not found");
             }
-            return Ok((EducationResponse)education);
+            return Ok(education);
         }
 
         [HttpPost]
         public IActionResult Insert(EducationRequestInsert request)
         {
-            TbMEmployee? employee;
-            TbMUniversity? university;
-
-            try
-            {
-                employee = _employeeRepository.GetByGuid(request.Guid);
-                university = _universityRepository.GetByGuid(request.UniversityGuid);
-            }
-            catch
+            var education = _educationService.Insert(request);
+            if (education is null)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-
-            if (employee == null)
-            {
-                return NotFound("Employee not found");
-            }
-
-            if (university == null)
-            {
-                return NotFound("University not found");
-            }
-
-            TbMEducation education;
-            try
-            {
-                education = _educationRepository.Insert(request);
-            }
-            catch
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-
-            return Ok((EducationResponse)education);
+            return Ok(education);
         }
 
         [HttpPut]
         public IActionResult Update(EducationRequestUpdate request)
         {
-            TbMEducation? education;
-            try
-            {
-                education = _educationRepository.GetByGuid(request.Guid);
-            }
-            catch
+            var education = _educationService.Update(request);
+            if (education is null)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-            if (education == null)
-            {
-                return NotFound("Education not found");
-            }
-
-            TbMEducation requestObj = request;
-            requestObj.CreatedDate = education.CreatedDate;
-
-            TbMEducation response;
-            try
-            {
-                response = _educationRepository.Update(requestObj);
-            }
-            catch
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-            return Ok((EducationResponse)response);
+            return Ok(education);
         }
 
         [HttpDelete("{id:Guid}")]
         public IActionResult Delete(Guid id)
         {
-            TbMEducation? education;
-
-            try
-            {
-                education = _educationRepository.GetByGuid(id);
-            }
-            catch
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-
-            if (education == null)
-            {
-                return NotFound("Education not found");
-            }
-
-            try
-            {
-                _educationRepository.Delete(education);
-            }
-            catch
+            var isDeleted = _educationService.Delete(id);
+            if (!isDeleted)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }

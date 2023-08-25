@@ -1,4 +1,5 @@
 ﻿using lat_brm.Contracts.Repositories;
+using lat_brm.Contracts.Services;
 using lat_brm.Dtos.Room;
 using lat_brm.Models;
 using lat_brm.Repositories;
@@ -11,123 +12,61 @@ namespace lat_brm.Controllers
     [ApiController]
     public class RoomController : ControllerBase
     {
-        private readonly IRoomRepository _roomRepository;
+        private readonly IRoomService _roomService;
 
-        public RoomController(IRoomRepository roomRepository)
+        public RoomController(IRoomService roomService)
         {
-            _roomRepository = roomRepository;
+            this._roomService = roomService;
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            IEnumerable<TbMRoom> rooms;
-            try
-            {
-                rooms = _roomRepository.GetAll();
-            }
-            catch (Exception)
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-            var roomResponses = rooms.Select(room => (RoomResponse)room);
-            return Ok(roomResponses);
+            var rooms = _roomService.GetAll();
+            return Ok(rooms);
         }
 
         [HttpGet("{id:Guid}")]
         public IActionResult GetById(Guid id)
         {
-            TbMRoom? room;
-            try
-            {
-                room = _roomRepository.GetByGuid(id);
-            }
-            catch
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-
-            if (room == null)
+            var room = _roomService.GetById(id);
+            if (room is null)
             {
                 return NotFound("Room not found");
             }
-            return Ok((RoomResponse)room);
+            return Ok(room);
         }
 
         [HttpPost]
         public IActionResult Insert(RoomRequestInsert request)
         {
-            TbMRoom room;
-            try
-            {
-                room = _roomRepository.Insert(request);
-            }
-            catch
+            var room = _roomService.Insert(request);
+            if (room is null)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-
-            return Ok((RoomResponse)room);
+            return Ok(room);
         }
 
         [HttpPut]
         public IActionResult Update(RoomRequestUpdate request)
         {
-            TbMRoom? room;
-            try
-            {
-                room = _roomRepository.GetByGuid(request.Guid);
-            }
-            catch
+            var room = _roomService.Update(request);
+            if (room is null)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-
-            if (room == null)
-            {
-                return NotFound("Room not found");
-            }
-            TbMRoom requestObj = request;
-            requestObj.CreatedDate = room.CreatedDate;
-            TbMRoom response;
-            try
-            {
-                response = _roomRepository.Update(requestObj);
-            }
-            catch
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-
-            return Ok((RoomResponse)response);
+            return Ok(room);
         }
 
         [HttpDelete("{id:Guid}")]
         public IActionResult Delete(Guid id)
         {
-            TbMRoom? room;
-            try
-            {
-                room = _roomRepository.GetByGuid(id);
-            }
-            catch (Exception)
+            var isDeleted = _roomService.Delete(id);
+            if (!isDeleted)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-            if (room == null)
-            {
-                return NotFound("Room not found");
-            }
-
-            try
-            {
-                _roomRepository.Delete(room);
-            }
-            catch
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-
             return NoContent();
         }
     }
