@@ -2,6 +2,7 @@
 using lat_brm.Contracts.Services;
 using lat_brm.Dtos.Account;
 using lat_brm.Models;
+using lat_brm.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace lat_brm.Controllers
@@ -67,6 +68,28 @@ namespace lat_brm.Controllers
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
             return Ok();
+        }
+
+        [HttpPost("register")]
+        public IActionResult Register(AccountRequestRegister request)
+        {
+            var isRegistered = _accountService.Register(request);
+            if (!isRegistered)
+            {
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+            return Ok("Registration Successful");
+        }
+
+        [HttpPost("login")]
+        public IActionResult Login(AccountRequestLogin request)
+        {
+            var isLogin = _accountService.Login(request);
+            if (!isLogin)
+            {
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+            return Ok("Login Successful");
         }
     }
 

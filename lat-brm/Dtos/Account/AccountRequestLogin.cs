@@ -1,6 +1,6 @@
-﻿namespace lat_brm.Dtos.Employee
+﻿namespace lat_brm.Dtos.Account
 {
-    public class EmployeeRequestLogin
+    public class AccountRequestLogin
     {
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;

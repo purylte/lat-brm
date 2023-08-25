@@ -11,7 +11,5 @@ namespace lat_brm.Contracts.Services
         bool Delete(Guid id);
         IEnumerable<EmployeeResponseInfo>? GetInfos();
         EmployeeResponseInfo? GetInfoById(Guid id);
-        bool Register(EmployeeRequestRegister request);
-        bool Login(EmployeeRequestLogin request);
     }
 }

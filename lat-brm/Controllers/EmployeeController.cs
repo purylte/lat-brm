@@ -93,27 +93,5 @@ namespace lat_brm.Controllers
             }
             return Ok(employeeInfo);
         }
-
-        [HttpPost("register")]
-        public IActionResult Register(EmployeeRequestRegister request)
-        {
-            var isRegistered = _employeeService.Register(request);
-            if (!isRegistered)
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-            return Ok("Registration Successful");
-        }
-
-        [HttpPost("login")]
-        public IActionResult Login(EmployeeRequestLogin request)
-        {
-            var isLogin = _employeeService.Login(request);
-            if (!isLogin)
-            {
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
-            return Ok("Login Successful");
-        }
     }
 }

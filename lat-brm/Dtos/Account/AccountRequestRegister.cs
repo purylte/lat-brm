@@ -1,8 +1,8 @@
 ﻿using lat_brm.Models;
 
-namespace lat_brm.Dtos.Employee
+namespace lat_brm.Dtos.Account
 {
-    public class EmployeeRequestRegister
+    public class AccountRequestRegister
     {
         public string Nik { get; set; } = null!;
         public string FirstName { get; set; } = null!;

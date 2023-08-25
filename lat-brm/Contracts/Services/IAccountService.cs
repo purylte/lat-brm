@@ -9,5 +9,7 @@ namespace lat_brm.Contracts.Services
         public AccountResponse? Insert(AccountRequestInsert request);
         public AccountResponse? Update(AccountRequestUpdate request);
         public bool Delete(Guid id);
+        bool Register(AccountRequestRegister request);
+        bool Login(AccountRequestLogin request);
     }
 }

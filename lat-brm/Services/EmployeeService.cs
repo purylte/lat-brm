@@ -16,17 +16,11 @@ namespace lat_brm.Services
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
-        private readonly IUniversityRepository _universityRepository;
-        private readonly IEducationRepository _educationRepository;
-        private readonly IAccountRepository _accountRepository;
         private readonly EmployeeDbContext _employeeDbContext;
 
-        public EmployeeService(IEmployeeRepository employeeRepository, IUniversityRepository universityRepository, IEducationRepository educationRepository, IAccountRepository accountRepository, EmployeeDbContext employeeDbContext)
+        public EmployeeService(IEmployeeRepository employeeRepository, EmployeeDbContext employeeDbContext)
         {
             _employeeRepository = employeeRepository;
-            _universityRepository = universityRepository;
-            _educationRepository = educationRepository;
-            _accountRepository = accountRepository;
             _employeeDbContext = employeeDbContext;
         }
 
@@ -100,7 +94,7 @@ namespace lat_brm.Services
                 // Left Join Employee and Education
                 // Left Join Education and University
                 // Populates response with null if theres no relation from Employee.
-                employeeResponses = 
+                employeeResponses =
                 from employee in _employeeDbContext.TbMEmployees
                 join education in _employeeDbContext.TbMEducations on employee.Guid equals education.Guid into eduGroup
                 from education in eduGroup.DefaultIfEmpty()
@@ -170,107 +164,5 @@ namespace lat_brm.Services
             var employeeResponse = employeeResponses.SingleOrDefault();
             return employeeResponse;
         }
-
-        public bool Register(EmployeeRequestRegister request)
-        {
-            if (request.Password != request.ConfirmPassword)
-            {
-                return false;
-            }
-            // Check if university exist then get university object else make new
-            var university = _universityRepository.GetByCodeAndName(request.UniversityCode, request.UniversityName);
-
-            try
-            {
-                university ??= _universityRepository.Insert(new UniversityRequestInsert
-                {
-                    Code = request.UniversityCode,
-                    Name = request.UniversityName
-                });
-            }
-            catch (Exception e) when (e is DbUpdateException || e is DbUpdateConcurrencyException)
-            {
-                return false;
-            }
-
-            var passwordHash = BCryptPassword.HashPassword(request.Password);
-
-            // Insert employee, education, and account
-            using var transaction = _employeeDbContext.Database.BeginTransaction();
-            try
-            {
-                var employee = _employeeRepository.Insert(new EmployeeRequestInsert
-                {
-                    Nik = request.Nik,
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    BirthDate = request.BirthDate,
-                    Gender = request.Gender,
-                    HiringDate = request.HiringDate,
-                    Email = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                });
-
-                _educationRepository.Insert(new EducationRequestInsert
-                {
-                    Guid = employee.Guid,
-                    Major = request.Major,
-                    Degree = request.Degree,
-                    Gpa = request.Gpa,
-                    UniversityGuid = university.Guid,
-                });
-
-                _accountRepository.Insert(new AccountRequestInsert
-                {
-                    Guid = employee.Guid,
-                    ExpiredTime = DateTime.Now.AddYears(1),
-                    IsDeleted = 0,
-                    IsUsed = 1,
-                    Otp = 12345,
-                    Password = passwordHash
-                });
-
-                transaction.Commit();
-            }
-            catch (Exception e) when (e is DbUpdateException || e is DbUpdateConcurrencyException)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public bool Login(EmployeeRequestLogin request)
-        {
-            TbMEmployee? employeeResponse;
-            try
-            {
-                employeeResponse = (
-                from employee in _employeeDbContext.TbMEmployees
-                join account in _employeeDbContext.TbMAccounts on employee.Guid equals account.Guid
-                where employee.Email == request.Email
-                select employee
-                ).Include(e => e.TbMAccount)
-                .FirstOrDefault();
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            if (employeeResponse is null) return false;
-
-            var employeeAccount = employeeResponse.TbMAccount;
-            if (employeeAccount is null || employeeAccount.Password is null) return false;
-
-            if (!BCryptPassword.ValidatePassword(request.Password, employeeAccount.Password))
-            {
-                return false;
-            }
-
-            return true;
-        }
     }
-
-
 }
