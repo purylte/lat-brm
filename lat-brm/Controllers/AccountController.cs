@@ -99,8 +99,8 @@ namespace lat_brm.Controllers
         {
             var token = await HttpContext.GetTokenAsync("access_token");
             var email = _jwtAuthentication.GetEmail(token!);
-            
-            return Ok($"Hello {email}");
+            var fullName = _jwtAuthentication.GetFullName(token!);
+            return Ok($"Hello {fullName}, {email}");
         }
     }
 
