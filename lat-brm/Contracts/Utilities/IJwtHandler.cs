@@ -1,6 +1,6 @@
-﻿namespace lat_brm.Contracts.Authentications
+﻿namespace lat_brm.Contracts.Utilities
 {
-    public interface IJwtAuthentication
+    public interface IJwtHandler
     {
         string GenerateToken(string email);
         string GetEmail(string tokenString);

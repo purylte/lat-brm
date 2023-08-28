@@ -1,6 +1,6 @@
-﻿using lat_brm.Contracts.Authentications;
-using lat_brm.Contracts.Repositories;
+﻿using lat_brm.Contracts.Repositories;
 using lat_brm.Contracts.Services;
+using lat_brm.Contracts.Utilities;
 using lat_brm.Data;
 using lat_brm.Dtos.Account;
 using lat_brm.Dtos.Education;
@@ -20,9 +20,9 @@ namespace lat_brm.Services
         private readonly IUniversityRepository _universityRepository;
         private readonly IEducationRepository _educationRepository;
         private readonly EmployeeDbContext _employeeDbContext;
-        private readonly IJwtAuthentication _jwtAuthentication;
+        private readonly IJwtHandler _jwtAuthentication;
 
-        public AccountService(IAccountRepository accountRepository, IEmployeeRepository employeeRepository, IUniversityRepository universityRepository, IEducationRepository educationRepository, EmployeeDbContext employeeDbContext, IJwtAuthentication jwtAuthentication)
+        public AccountService(IAccountRepository accountRepository, IEmployeeRepository employeeRepository, IUniversityRepository universityRepository, IEducationRepository educationRepository, EmployeeDbContext employeeDbContext, IJwtHandler jwtAuthentication)
         {
             _accountRepository = accountRepository;
             _employeeRepository = employeeRepository;

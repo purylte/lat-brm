@@ -9,8 +9,8 @@ using lat_brm.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using lat_brm.Contracts.Authentications;
-using lat_brm.Authentications;
+using lat_brm.Utilities;
+using lat_brm.Contracts.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +47,7 @@ builder.Services.AddScoped<IUniversityService, UniversityService>();
 
 
 // JWT Configuration
-builder.Services.AddScoped<IJwtAuthentication, JwtAuthentication>();
+builder.Services.AddScoped<IJwtHandler, JwtHandler>();
 
 builder.Services.AddAuthentication(options =>
 {

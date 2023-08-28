@@ -1,9 +1,6 @@
-﻿using lat_brm.Contracts.Authentications;
-using lat_brm.Contracts.Repositories;
-using lat_brm.Contracts.Services;
+﻿using lat_brm.Contracts.Services;
+using lat_brm.Contracts.Utilities;
 using lat_brm.Dtos.Account;
-using lat_brm.Models;
-using lat_brm.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +12,10 @@ namespace lat_brm.Controllers
     public class AccountController : ControllerBase
     {
 
-        private readonly IJwtAuthentication _jwtAuthentication;
+        private readonly IJwtHandler _jwtAuthentication;
         private readonly IAccountService _accountService;
 
-        public AccountController(IAccountService accountService, IJwtAuthentication jwtAuthentication)
+        public AccountController(IAccountService accountService, IJwtHandler jwtAuthentication)
         {
             _accountService = accountService;
             _jwtAuthentication = jwtAuthentication;
@@ -98,10 +95,12 @@ namespace lat_brm.Controllers
         }
 
         [HttpGet("authorized"), Authorize]
-        public async Task<IActionResult> GetAsync()
+        public async Task<IActionResult> Home()
         {
             var token = await HttpContext.GetTokenAsync("access_token");
-            return Ok($"Hello {_jwtAuthentication.GetEmail(token!)}");
+            var email = _jwtAuthentication.GetEmail(token!);
+            
+            return Ok($"Hello {email}");
         }
     }
 

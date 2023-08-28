@@ -1,16 +1,16 @@
-﻿using lat_brm.Contracts.Authentications;
+﻿using lat_brm.Contracts.Utilities;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace lat_brm.Authentications
+namespace lat_brm.Utilities
 {
-    public class JwtAuthentication : IJwtAuthentication
+    public class JwtHandler : IJwtHandler
     {
         private readonly IConfiguration _configuration;
 
-        public JwtAuthentication(IConfiguration configuration)
+        public JwtHandler(IConfiguration configuration)
         {
             _configuration = configuration;
         }
