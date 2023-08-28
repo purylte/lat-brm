@@ -1,7 +1,5 @@
 using lat_brm.Data;
 using Microsoft.EntityFrameworkCore;
-using lat_brm.Controllers;
-using lat_brm.Models;
 using lat_brm.Repositories;
 using lat_brm.Contracts.Repositories;
 using lat_brm.Contracts.Services;
@@ -17,13 +15,11 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<EmployeeDbContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Add services to the container.
-
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 
 // Add repositories
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
@@ -43,10 +39,7 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IUniversityService, UniversityService>();
 
-
-
-
-// JWT Configuration
+// JWT
 builder.Services.AddScoped<IJwtHandler, JwtHandler>();
 
 builder.Services.AddAuthentication(options =>
