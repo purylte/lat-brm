@@ -2,7 +2,8 @@
 {
     public interface IJwtHandler
     {
-        string GenerateToken(string email);
+        string GenerateToken(string email, string fullName);
         string GetEmail(string tokenString);
+        string GetFullName(string tokenString);
     }
 }

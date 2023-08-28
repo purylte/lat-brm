@@ -15,7 +15,7 @@ namespace lat_brm.Utilities
             _configuration = configuration;
         }
 
-        public string GenerateToken(string email)
+        public string GenerateToken(string email, string name)
         {
             var issuer = _configuration["Jwt:Issuer"];
             var audience = _configuration["Jwt:Audience"];
@@ -26,6 +26,7 @@ namespace lat_brm.Utilities
                 new Claim(JwtRegisteredClaimNames.Jti,
                 Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, email),
+                new Claim(JwtRegisteredClaimNames.Name, name)
             });
 
 
@@ -48,6 +49,14 @@ namespace lat_brm.Utilities
             JwtSecurityToken token = tokenHandler.ReadJwtToken(tokenString);
 
             return token.Claims.Single(claim => claim.Type.Equals(JwtRegisteredClaimNames.Email)).Value;
+        }
+
+        public string GetFullName(string tokenString)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            JwtSecurityToken token = tokenHandler.ReadJwtToken(tokenString);
+
+            return token.Claims.Single(claim => claim.Type.Equals(JwtRegisteredClaimNames.Name)).Value;
         }
     }
 }
