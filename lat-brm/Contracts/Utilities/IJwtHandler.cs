@@ -1,8 +1,10 @@
-﻿namespace lat_brm.Contracts.Utilities
+﻿using System.Security.Claims;
+
+namespace lat_brm.Contracts.Utilities
 {
     public interface IJwtHandler
     {
-        string GenerateToken(string email, string fullName);
+        string GenerateToken(ClaimsIdentity subject);
         string GetEmail(string tokenString);
         string GetFullName(string tokenString);
     }

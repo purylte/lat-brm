@@ -15,20 +15,12 @@ namespace lat_brm.Utilities
             _configuration = configuration;
         }
 
-        public string GenerateToken(string email, string name)
+        public string GenerateToken(ClaimsIdentity subject)
         {
             var issuer = _configuration["Jwt:Issuer"];
             var audience = _configuration["Jwt:Audience"];
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
             var expiry = DateTime.Now.AddMinutes(120);
-
-            var subject = new ClaimsIdentity(new Claim[] {
-                new Claim(JwtRegisteredClaimNames.Jti,
-                Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(JwtRegisteredClaimNames.Name, name)
-            });
-
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenDescriptor = new SecurityTokenDescriptor

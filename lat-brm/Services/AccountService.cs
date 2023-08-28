@@ -10,6 +10,9 @@ using lat_brm.Models;
 using lat_brm.Repositories;
 using lat_brm.Utilities;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Xml.Linq;
 
 namespace lat_brm.Services
 {
@@ -146,9 +149,15 @@ namespace lat_brm.Services
             }
 
             string token;
+
+            string email = employee.Email!;
+            string fullName = employee.FirstName + " " + employee.LastName;
             try
             {
-                token = _jwtAuthentication.GenerateToken(employee.Email!);
+                token = _jwtAuthentication.GenerateToken(
+                    GenerateClaims(
+                        email, fullName
+                    ));
             }
             catch (Exception)
             {
@@ -185,9 +194,15 @@ namespace lat_brm.Services
                 return null;
             }
             string token;
+
+            string email = employee.Email!;
+            string fullName = employee.FirstName + " " + employee.LastName;
             try
             {
-                token = _jwtAuthentication.GenerateToken(employee.Email!);
+                token = _jwtAuthentication.GenerateToken(
+                    GenerateClaims(
+                        email, fullName
+                    ));
             }
             catch (Exception)
             {
@@ -218,6 +233,17 @@ namespace lat_brm.Services
                 return null;
             }
             return (AccountResponse)updatedAccount;
+        }
+
+        private static ClaimsIdentity GenerateClaims(string email, string name)
+        {
+            var subject = new ClaimsIdentity(new Claim[] {
+                new Claim(JwtRegisteredClaimNames.Jti,
+                Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, email),
+                new Claim(JwtRegisteredClaimNames.Name, name)
+            });
+            return subject;
         }
     }
 }
