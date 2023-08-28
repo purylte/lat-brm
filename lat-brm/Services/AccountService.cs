@@ -1,4 +1,5 @@
-﻿using lat_brm.Contracts.Repositories;
+﻿using lat_brm.Contracts.Authentications;
+using lat_brm.Contracts.Repositories;
 using lat_brm.Contracts.Services;
 using lat_brm.Data;
 using lat_brm.Dtos.Account;
@@ -19,14 +20,16 @@ namespace lat_brm.Services
         private readonly IUniversityRepository _universityRepository;
         private readonly IEducationRepository _educationRepository;
         private readonly EmployeeDbContext _employeeDbContext;
+        private readonly IJwtAuthentication _jwtAuthentication;
 
-        public AccountService(IAccountRepository accountRepository, IEmployeeRepository employeeRepository, IUniversityRepository universityRepository, IEducationRepository educationRepository, EmployeeDbContext employeeDbContext)
+        public AccountService(IAccountRepository accountRepository, IEmployeeRepository employeeRepository, IUniversityRepository universityRepository, IEducationRepository educationRepository, EmployeeDbContext employeeDbContext, IJwtAuthentication jwtAuthentication)
         {
             _accountRepository = accountRepository;
             _employeeRepository = employeeRepository;
             _universityRepository = universityRepository;
             _educationRepository = educationRepository;
             _employeeDbContext = employeeDbContext;
+            _jwtAuthentication = jwtAuthentication;
         }
 
         public bool Delete(Guid id)
@@ -75,11 +78,11 @@ namespace lat_brm.Services
 
         }
 
-        public bool Register(AccountRequestRegister request)
+        public AccountResponseAuthenticate? Register(AccountRequestRegister request)
         {
             if (request.Password != request.ConfirmPassword)
             {
-                return false;
+                return null;
             }
             // Check if university exist then get university object else make new
             var university = _universityRepository.GetByCodeAndName(request.UniversityCode, request.UniversityName);
@@ -94,16 +97,17 @@ namespace lat_brm.Services
             }
             catch (Exception e) when (e is DbUpdateException || e is DbUpdateConcurrencyException)
             {
-                return false;
+                return null;
             }
 
             var passwordHash = BCryptPassword.HashPassword(request.Password);
 
             // Insert employee, education, and account
             using var transaction = _employeeDbContext.Database.BeginTransaction();
+            TbMEmployee employee;
             try
             {
-                var employee = _employeeRepository.Insert(new EmployeeRequestInsert
+                employee = _employeeRepository.Insert(new EmployeeRequestInsert
                 {
                     Nik = request.Nik,
                     FirstName = request.FirstName,
@@ -138,41 +142,58 @@ namespace lat_brm.Services
             }
             catch (Exception e) when (e is DbUpdateException || e is DbUpdateConcurrencyException)
             {
-                return false;
+                return null;
             }
 
-            return true;
-        }
-
-        public bool Login(AccountRequestLogin request)
-        {
-            TbMEmployee? employeeResponse;
+            string token;
             try
             {
-                employeeResponse = (
-                from employee in _employeeDbContext.TbMEmployees
-                join account in _employeeDbContext.TbMAccounts on employee.Guid equals account.Guid
-                where employee.Email == request.Email
-                select employee
+                token = _jwtAuthentication.GenerateToken(employee.Email!);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return new AccountResponseAuthenticate { Token = token };
+        }
+
+        public AccountResponseAuthenticate? Login(AccountRequestLogin request)
+        {
+            TbMEmployee? employee;
+            try
+            {
+                employee = (
+                from e in _employeeDbContext.TbMEmployees
+                join a in _employeeDbContext.TbMAccounts on e.Guid equals a.Guid
+                where e.Email == request.Email
+                select e
                 ).Include(e => e.TbMAccount)
                 .FirstOrDefault();
             }
             catch (Exception)
             {
-                return false;
+                return null;
             }
 
-            if (employeeResponse is null) return false;
+            if (employee is null) return null;
 
-            var employeeAccount = employeeResponse.TbMAccount;
-            if (employeeAccount is null || employeeAccount.Password is null) return false;
+            var employeeAccount = employee.TbMAccount;
+            if (employeeAccount is null || employeeAccount.Password is null) return null;
 
             if (!BCryptPassword.ValidatePassword(request.Password, employeeAccount.Password))
             {
-                return false;
+                return null;
             }
-
-            return true;
+            string token;
+            try
+            {
+                token = _jwtAuthentication.GenerateToken(employee.Email!);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return new AccountResponseAuthenticate { Token = token };
         }
 
 

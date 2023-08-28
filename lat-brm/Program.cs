@@ -6,6 +6,11 @@ using lat_brm.Repositories;
 using lat_brm.Contracts.Repositories;
 using lat_brm.Contracts.Services;
 using lat_brm.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using lat_brm.Contracts.Authentications;
+using lat_brm.Authentications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +44,32 @@ builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IUniversityService, UniversityService>();
 
 
+
+
+// JWT Configuration
+builder.Services.AddScoped<IJwtAuthentication, JwtAuthentication>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Issuer"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -50,6 +81,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

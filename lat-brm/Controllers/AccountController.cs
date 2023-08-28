@@ -1,8 +1,11 @@
-﻿using lat_brm.Contracts.Repositories;
+﻿using lat_brm.Contracts.Authentications;
+using lat_brm.Contracts.Repositories;
 using lat_brm.Contracts.Services;
 using lat_brm.Dtos.Account;
 using lat_brm.Models;
 using lat_brm.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace lat_brm.Controllers
@@ -12,11 +15,13 @@ namespace lat_brm.Controllers
     public class AccountController : ControllerBase
     {
 
+        private readonly IJwtAuthentication _jwtAuthentication;
         private readonly IAccountService _accountService;
 
-        public AccountController(IAccountService accountService)
+        public AccountController(IAccountService accountService, IJwtAuthentication jwtAuthentication)
         {
             _accountService = accountService;
+            _jwtAuthentication = jwtAuthentication;
         }
 
         [HttpGet]
@@ -73,23 +78,30 @@ namespace lat_brm.Controllers
         [HttpPost("register")]
         public IActionResult Register(AccountRequestRegister request)
         {
-            var isRegistered = _accountService.Register(request);
-            if (!isRegistered)
+            var tokenResponse = _accountService.Register(request);
+            if (tokenResponse == null)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-            return Ok("Registration Successful");
+            return Ok(tokenResponse);
         }
 
         [HttpPost("login")]
         public IActionResult Login(AccountRequestLogin request)
         {
-            var isLogin = _accountService.Login(request);
-            if (!isLogin)
+            var tokenResponse = _accountService.Login(request);
+            if (tokenResponse == null)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-            return Ok("Login Successful");
+            return Ok(tokenResponse);
+        }
+
+        [HttpGet("authorized"), Authorize]
+        public async Task<IActionResult> GetAsync()
+        {
+            var token = await HttpContext.GetTokenAsync("access_token");
+            return Ok($"Hello {_jwtAuthentication.GetEmail(token!)}");
         }
     }
 
